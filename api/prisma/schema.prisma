@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Usuarios {
+  id            Int      @id @default(autoincrement())
+  nome          String
+  email         String   @unique
+  senha         String
+  data_cadastro DateTime @default(now())
+
+  aliens        Aliens[]
+}
+
+model Aliens {
+  id            Int      @id @default(autoincrement())
+  nome          String
+  usuarioId     Int
+  usuario       Usuarios @relation(fields: [usuarioId], references: [id])
+  data_cadastro DateTime @default(now())
+
+  series        AliensSeries[]
+}
+
+model AliensSeries {
+  id            Int      @id @default(autoincrement())
+  alienId       Int
+  alien         Aliens  @relation(fields: [alienId], references: [id])
+  serie         Serie
+
+  @@unique([alienId, serie])
+}
+
+enum Serie {
+  CLASSICO
+  FORCA_ALIENIGENA
+  SUPREMACIA_ALIENIGENA
+  HEROIS_UNIDOS
+  OMNIVERSE
+}
