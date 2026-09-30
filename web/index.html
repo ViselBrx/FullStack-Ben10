@@ -1,34 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FullStack Teste</title>
+    <title>FullStack Ben10</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
+    <!-- Cabeçalho de navegação -->
     <header class="nav-header">
         <h1>FullStack Teste - Home</h1>
         <li class="home"><a href="#index.html">Home</a></li>
         <li class="crud"><a href="#cadastro.html">Cadastro</a></li>
     </header>
-    
-    <main>
-        <article>
-            <h2>Como usar HTML Semântico</h2>
-            <p>O HTML semântico melhora a acessibilidade e o SEO do seu site...</p>
-        </article>
 
-        <article>
-            <h2>Dicas de CSS Moderno</h2>
-            <p>Aprenda a usar Flexbox e Grid para criar layouts incríveis...</p>
-        </article>
+    <main class="main-container">
+        <section class="section-container">
+            <div class="article">
+                <h2 class="h2-text">Bem-Vindo ao cadastro de aliens de ben 10</h2>
+                <p class="p-description">Nesse site, usaremos a rota de API do nosso backend para cadastrar, editar,
+                    listar e deletar aliens de ben 10.</p>
+            </div>
+            <div class="direct-pages">
+                <h2 class="buttons-container">Direcionamento de cadastro</h2>
+                <button class="cad-aliens">
+                    <a href="cadastro.html">Cadastrar Aliens</a>
+                </button>
+            </div>
+        </section>
     </main>
 
     <!-- Rodapé do site -->
-    <footer>
-        <p>&copy; 2026 ---. Todos os direitos reservados.</p>
-    </footer>
+    <div class="footer">
+        <footer>
+            <p>&copy; 2026 FullStack Ben10; Todos os direitos reservados.</p>
+        </footer>
+    </div>
 
 </body>
+
 </html>
