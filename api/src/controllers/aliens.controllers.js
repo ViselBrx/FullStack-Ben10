@@ -22,11 +22,22 @@ const listar = async (req, res) => {
 const cadastrar = async (req, res) => {
 
     const data = req.body;
+    const usuarioId = Number(data.usuarioId);
+
+    if (!Number.isInteger(usuarioId) || usuarioId < 1) {
+        return res.status(400).json({
+            message: "Informe um ID de usuário válido."
+        });
+    }
 
     const item = await prisma.aliens.create({
         data: {
             nome: data.nome,
-            usuarioId: Number(data.usuarioId),
+            usuario: {
+                connect: {
+                    id: usuarioId
+                }
+            },
 
             series: {
                 create: data.series.map((serie) => ({ // cria um novo registro na tabela aliensSeries para cada série associada ao alien
@@ -44,6 +55,13 @@ const atualizar = async (req, res) => {
     const { id } = req.params;
 
     const data = req.body;
+    const usuarioId = Number(data.usuarioId);
+
+    if (!Number.isInteger(usuarioId) || usuarioId < 1) {
+        return res.status(400).json({
+            message: "Informe um ID de usuário válido."
+        });
+    }
 
     await prisma.aliensSeries.deleteMany({
         where: {
@@ -58,7 +76,11 @@ const atualizar = async (req, res) => {
 
         data: {
             nome: data.nome,
-            usuarioId: Number(data.usuarioId),
+            usuario: {
+                connect: {
+                    id: usuarioId
+                }
+            },
 
             series: {
                 create: data.series.map((serie) => ({ // atualiza o registro na tabela aliensSeries para cada série associada ao alien

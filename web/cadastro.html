@@ -1,86 +1,89 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de aliens</title>
+    <meta name="description" content="Cadastre, consulte e gerencie os aliens do universo Ben 10.">
+    <title>Cadastro de aliens | FullStack Ben10</title>
     <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
 
 <body>
-
-    <!-- Cabeçalho de navegação -->
     <header class="topo">
-        <h1>Cadastro de aliens de ben 10</h1>
-        <li class="home"><a href="index.html">Home</a></li>
-        <li class="crud"><a href="cadastro.html">Cadastro</a></li>
+        <h1>Aliens de Ben 10</h1>
+        <nav aria-label="Navegação principal">
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="cadastro.html" aria-current="page">Cadastro</a></li>
+            </ul>
+        </nav>
     </header>
 
-    <!-- Conteúdo principal -->
     <main class="principal">
         <section class="conteudo">
-
             <div class="artigo">
-                <h2>Cadastrar Novo Alien</h2>
-                <p>Preencha os campos para cadastrar o alienígena.</p>
+                <p class="eyebrow">Gerencie sua coleção</p>
+                <h2>Cadastrar novo alien</h2>
+                <p>Informe os dados do alienígena e selecione as séries em que ele aparece.</p>
             </div>
 
-            <!-- Formulário de cadastro -->
             <form id="form-cad">
-                <label for="nome-alien">Nome:</label>
-                <input type="text" id="nome-alien" placeholder="Nome do alien" required>
+                <div class="form-grid">
+                    <div class="field field-full">
+                        <label for="nome-alien">Nome do alien</label>
+                        <input type="text" id="nome-alien" name="nome" placeholder="Ex.: Chama"
+                            maxlength="100" autocomplete="off" required>
+                    </div>
 
-                <label for="series-alien">Séries:</label>
-                <select id="series-alien" multiple required> <!-- Multiplas escolhas -->
-                    <option value="CLASSICO">Clássico</option>
-                    <option value="FORCA_ALIENIGENA">Força Alienígena</option>
-                    <option value="SUPREMACIA_ALIENIGENA">Supremacia Alienígena</option>
-                    <option value="HEROIS_UNIDOS">Heróis Unidos</option>
-                    <option value="OMNIVERSE">Omniverse</option>
-                </select>
+                    <div class="field field-full">
+                        <label for="usuario-id">ID do usuário</label>
+                        <input type="number" id="usuario-id" name="usuarioId" min="1" step="1"
+                            placeholder="Ex.: 1" required>
+                        <small>Informe o ID de um usuário cadastrado.</small>
+                    </div>
 
-                <button type="button" onclick="cadastrarAlien()">Cadastrar Alien</button>
+                    <div class="field field-full">
+                        <label for="series-alien">Séries</label>
+                        <select id="series-alien" name="series" multiple size="5" required
+                            aria-describedby="series-ajuda">
+                            <option value="CLASSICO">Clássico</option>
+                            <option value="FORCA_ALIENIGENA">Força Alienígena</option>
+                            <option value="SUPREMACIA_ALIENIGENA">Supremacia Alienígena</option>
+                            <option value="HEROIS_UNIDOS">Heróis Unidos</option>
+                            <option value="OMNIVERSE">Omniverse</option>
+                        </select>
+                        <small id="series-ajuda">Use Ctrl (ou Command no Mac) para selecionar mais de uma série.</small>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button id="submit-cadastro" type="submit">Cadastrar alien</button>
+                    <button id="cancelar-edicao" class="button-secondary" type="button" hidden>Cancelar edição</button>
+                </div>
             </form>
 
-            <!-- Cards dos aliens cadastrados -->
-            <div class="lista">
-                <h2>Aliens Cadastrados</h2>
-                <div id="lista-aliens" class="cards">
-                    <!-- Os cards dos aliens serão inseridos aqui -->
+            <p id="mensagem" class="mensagem" role="status" aria-live="polite"></p>
+
+            <section class="lista" aria-labelledby="titulo-lista">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Sua coleção</p>
+                        <h2 id="titulo-lista">Aliens cadastrados</h2>
+                    </div>
+                    <button id="atualizar-lista" class="button-secondary" type="button">Atualizar lista</button>
                 </div>
-            </div>
-
-            <!-- Detalhes e edição -->
-            <div id="detalhes">
-                <h2>Editar / Excluir Alien</h2>
-
-                <label for="nome-edit">Nome:</label>
-                <input type="text" id="nome-edit">
-
-                <label for="series-edit">Séries:</label>
-                <select id="series-edit" multiple>
-                    <option value="CLASSICO">Clássico</option>
-                    <option value="FORCA_ALIENIGENA">Força Alienígena</option>
-                    <option value="SUPREMACIA_ALIENIGENA">Supremacia Alienígena</option>
-                    <option value="HEROIS_UNIDOS">Heróis Unidos</option>
-                    <option value="OMNIVERSE">Omniverse</option>
-                </select>
-
-                <button type="button" onclick="atualizarAlien()">Atualizar</button>
-                <button type="button" onclick="excluirAlien()">Excluir</button>
-            </div>
-
+                <div id="lista-aliens" class="cards" aria-live="polite">
+                    <p class="list-message">Carregando aliens...</p>
+                </div>
+            </section>
         </section>
     </main>
 
-    <!-- Rodapé do site -->
-    <div class="rodape">
-        <footer>
-            <p>&copy; 2026 FullStack Ben10; Todos os direitos reservados.</p>
-        </footer>
-    </div>
-
+    <footer class="rodape">
+        <p>&copy; 2026 FullStack Ben10; Todos os direitos reservados.</p>
+    </footer>
 </body>
 
 </html>

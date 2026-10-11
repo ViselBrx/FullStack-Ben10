@@ -1,251 +1,208 @@
-const url = 'http://localhost:3000';
+const apiUrl = 'http://localhost:3000';
+const seriesNames = {
+    CLASSICO: 'Clássico',
+    FORCA_ALIENIGENA: 'Força Alienígena',
+    SUPREMACIA_ALIENIGENA: 'Supremacia Alienígena',
+    HEROIS_UNIDOS: 'Heróis Unidos',
+    OMNIVERSE: 'Omniverse'
+};
 
-const aliens = [];
-let alienAtual = null;
+const form = document.querySelector('#form-cad');
+const nameInput = document.querySelector('#nome-alien');
+const userIdInput = document.querySelector('#usuario-id');
+const seriesSelect = document.querySelector('#series-alien');
+const aliensList = document.querySelector('#lista-aliens');
+const message = document.querySelector('#mensagem');
+const submitButton = document.querySelector('#submit-cadastro');
+const cancelButton = document.querySelector('#cancelar-edicao');
 
-///////////////////////////////// 
+let selectedAlien = null;
+
+form.addEventListener('submit', salvarAlien);
+cancelButton.addEventListener('click', cancelarEdicao);
+document.querySelector('#atualizar-lista').addEventListener('click', carregarAliens);
 
 carregarAliens();
 
-function carregarAliens() {
+async function request(path, options = {}) {
+    const response = await fetch(`${apiUrl}${path}`, options);
+    const responseText = await response.text();
+    let data = null;
 
-    fetch(url + '/aliens')
+    if (responseText) {
+        try {
+            data = JSON.parse(responseText);
+        } catch {
+            data = null;
+        }
+    }
 
-        .then(response => response.json())
+    if (!response.ok) {
+        const detail = data && (data.message || data.error);
+        throw new Error(detail || `A API respondeu com o status ${response.status}.`);
+    }
 
-        .then(data => {
-            aliens.length = 0;
-            aliens.push(...data);
-            listarAliens();
-        })
-
-        .catch(() => {
-            alert('Problemas com a conexão da API');
-        });
+    return data;
 }
 
-///////////////////////////////// listar
+async function carregarAliens() {
+    aliensList.setAttribute('aria-busy', 'true');
+    aliensList.replaceChildren(criarTexto('Carregando aliens...', 'list-message'));
 
-function listarAliens() {
-
-    const container = document.querySelector('main');
-
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    aliens.forEach(alien => {
-
-        const card = document.createElement('div');
-
-        card.classList.add('card');
-
-        card.innerHTML = `
-            <h3>${alien.nome}</h3>
-            <p>Usuário: ${alien.usuarioId}</p>
-            <p>
-                Séries:
-                ${alien.series.join(', ')}
-            </p>
-        `;
-        card.onclick = () => abrirAlien(alien);
-
-        container.appendChild(card);
-    });
+    try {
+        const aliens = await request('/aliens/listar');
+        renderizarAliens(aliens);
+    } catch (error) {
+        aliensList.replaceChildren(criarTexto(
+            `Não foi possível carregar os aliens. ${error.message}`,
+            'list-message error-message'
+        ));
+    } finally {
+        aliensList.removeAttribute('aria-busy');
+    }
 }
 
-///////////////////////////////// abrir 
-
-function abrirAlien(alien) {
-
-    alienAtual = alien;
-
-    console.log('Alien selecionado:', alien);
-
-    // Quando o HTML estiver pronto,
-    // colocamos os dados nos campos de edição aqui.
-
-    nomeEdit.value = alien.nome;
-
-    alien.series.forEach(serie => {
-        ///
-    });
-
-    detalhes.classList.remove('oculto');
-}
-
-///////////////////////////////// cadastrar
-
-function cadastrarAlien() {
-
-    const nome = document.querySelector('#nomeAlien').value;
-
-    const usuarioId =
-        Number(document.querySelector('#usuarioId').value);
-
-    const series = Array.from(
-        document.querySelector('#seriesAlien').selectedOptions
-    ).map(option => option.value);
-
-
-    if (!nome || !usuarioId || series.length === 0) {
-
-        alert('Preencha todos os campos!');
-
+function renderizarAliens(aliens) {
+    if (!Array.isArray(aliens) || aliens.length === 0) {
+        aliensList.replaceChildren(criarTexto('Nenhum alien cadastrado ainda.', 'list-message'));
         return;
     }
 
+    const cards = aliens.map(alien => {
+        const card = document.createElement('article');
+        card.className = 'card';
 
-    const novoAlien = {
-        nome: nome,
-        usuarioId: usuarioId,
-        series: series
-    };
+        const title = document.createElement('h3');
+        title.textContent = alien.nome;
 
+        const series = document.createElement('p');
+        const names = Array.isArray(alien.series)
+            ? alien.series.map(serie => seriesNames[serie] || serie)
+            : [];
+        series.textContent = `Séries: ${names.length ? names.join(', ') : 'Nenhuma informada'}`;
 
-    fetch(url + '/aliens', {
+        const actions = document.createElement('div');
+        actions.className = 'card-actions';
 
-        method: 'POST',
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.className = 'button-secondary';
+        editButton.textContent = 'Editar';
+        editButton.setAttribute('aria-label', `Editar ${alien.nome}`);
+        editButton.addEventListener('click', () => iniciarEdicao(alien));
 
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'button-danger';
+        deleteButton.textContent = 'Excluir';
+        deleteButton.setAttribute('aria-label', `Excluir ${alien.nome}`);
+        deleteButton.addEventListener('click', () => excluirAlien(alien));
 
-        body: JSON.stringify(novoAlien)
+        actions.append(editButton, deleteButton);
+        card.append(title, series, actions);
+        return card;
+    });
 
-    })
-
-        .then(response => {
-
-            if (!response.ok) {
-                throw new Error();
-            }
-
-            return response.json();
-
-        })
-
-        .then(() => {
-
-            alert('Alien cadastrado com sucesso!');
-
-            document.querySelector('#formCad').reset();
-
-            carregarAliens();
-
-        })
-
-        .catch(() => {
-
-            alert('Erro ao cadastrar alien');
-
-        });
+    aliensList.replaceChildren(...cards);
 }
 
-///////////////////////////////// atulizar
+async function salvarAlien(event) {
+    event.preventDefault();
 
-function atualizarAlien() {
+    const nome = nameInput.value.trim();
+    const usuarioId = userIdInput.valueAsNumber;
+    const series = Array.from(seriesSelect.selectedOptions, option => option.value);
 
-    if (!alienAtual) return;
-
-
-    const nome =
-        document.querySelector('#nomeEdit').value;
-
-    const usuarioId =
-        Number(document.querySelector('#usuarioIdEdit').value);
-
-    const series = Array.from(
-        document.querySelector('#seriesEdit').selectedOptions
-    ).map(option => option.value);
-
-
-    const alienEditado = {
-        nome: nome,
-        usuarioId: usuarioId,
-        series: series
-    };
-
-
-    fetch(url + '/aliens/' + alienAtual.id, {
-
-        method: 'PUT',
-
-        headers: {
-            'Content-Type': 'application/json'
-        },
-
-        body: JSON.stringify(alienEditado)
-
-    })
-
-        .then(response => {
-
-            if (!response.ok) {
-                throw new Error();
-            }
-
-            return response.json();
-
-        })
-
-        .then(() => {
-
-            alert('Alien atualizado com sucesso!');
-
-            alienAtual = null;
-
-            carregarAliens();
-
-        })
-
-        .catch(() => {
-
-            alert('Erro ao atualizar alien');
-
-        });
-}
-
-///////////////////////////////// excluir
-
-function excluirAlien() {
-
-    if (!alienAtual) return;
-
-    if (!confirm('Deseja excluir o alien?')) {
+    if (!nome || !Number.isInteger(usuarioId) || usuarioId < 1 || series.length === 0) {
+        exibirMensagem('Preencha o nome, informe um ID de usuário válido e selecione pelo menos uma série.', true);
         return;
     }
 
+    const editing = selectedAlien !== null;
+    const alien = {
+        nome,
+        usuarioId,
+        series
+    };
+    const path = editing
+        ? `/aliens/atualizar/${selectedAlien.id}`
+        : '/aliens/cadastrar';
 
-    fetch(url + '/aliens/' + alienAtual.id, {
+    submitButton.disabled = true;
+    exibirMensagem(editing ? 'Atualizando alien...' : 'Cadastrando alien...');
 
-        method: 'DELETE'
-
-    })
-
-        .then(response => {
-
-            if (!response.ok) {
-                throw new Error();
-            }
-
-            return response.json();
-
-        })
-
-        .then(() => {
-
-            alert('Alien excluído com sucesso!');
-
-            alienAtual = null;
-
-            carregarAliens();
-
-        })
-
-        .catch(() => {
-
-            alert('Erro ao excluir alien');
-
+    try {
+        await request(path, {
+            method: editing ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(alien)
         });
+
+        form.reset();
+        selectedAlien = null;
+        atualizarModoFormulario(false);
+        exibirMensagem(editing ? 'Alien atualizado com sucesso.' : 'Alien cadastrado com sucesso.');
+        await carregarAliens();
+    } catch (error) {
+        exibirMensagem(`Não foi possível salvar o alien. ${error.message}`, true);
+    } finally {
+        submitButton.disabled = false;
+    }
+}
+
+function iniciarEdicao(alien) {
+    selectedAlien = alien;
+    nameInput.value = alien.nome;
+    userIdInput.value = alien.usuarioId;
+
+    const selectedSeries = new Set(alien.series || []);
+    Array.from(seriesSelect.options).forEach(option => {
+        option.selected = selectedSeries.has(option.value);
+    });
+
+    atualizarModoFormulario(true);
+    exibirMensagem(`Editando ${alien.nome}.`);
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    nameInput.focus({ preventScroll: true });
+}
+
+function cancelarEdicao() {
+    selectedAlien = null;
+    form.reset();
+    atualizarModoFormulario(false);
+    exibirMensagem('Edição cancelada.');
+}
+
+function atualizarModoFormulario(editing) {
+    submitButton.textContent = editing ? 'Salvar alterações' : 'Cadastrar alien';
+    cancelButton.hidden = !editing;
+}
+
+async function excluirAlien(alien) {
+    if (!window.confirm(`Deseja excluir ${alien.nome}? Esta ação não pode ser desfeita.`)) {
+        return;
+    }
+
+    try {
+        await request(`/aliens/excluir/${alien.id}`, { method: 'DELETE' });
+        if (selectedAlien && selectedAlien.id === alien.id) {
+            cancelarEdicao();
+        }
+        exibirMensagem(`${alien.nome} foi excluído.`);
+        await carregarAliens();
+    } catch (error) {
+        exibirMensagem(`Não foi possível excluir o alien. ${error.message}`, true);
+    }
+}
+
+function exibirMensagem(text, isError = false) {
+    message.textContent = text;
+    message.classList.toggle('error-message', isError);
+}
+
+function criarTexto(text, className) {
+    const element = document.createElement('p');
+    element.className = className;
+    element.textContent = text;
+    return element;
 }
